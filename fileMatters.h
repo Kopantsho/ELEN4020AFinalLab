@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <fstream>
+#include <vector>
 static int matrixSize;
 class fileMatters
 {
@@ -18,14 +19,24 @@ public:
 	}
 	void generateRandomMatrixFile()
 	{//Generate file of row column order matrix in binary file
-		int value = 2505;
+		std::vector<int> numbers;
+		//Generate Random Numbers
+		for(auto i = 0; i< matrixSize; i++) {
+			numbers.push_back(std::rand() %100);
+			std::cout<<numbers.at(i)<<std::endl;
+		}
+		
 		std::ofstream outStream("matrix", std::ios::binary);
 		if(outStream.is_open()){
-			outStream.write(reinterpret_cast<const char*>(&value), sizeof(int));
+			for(auto x:numbers){
+			outStream.write(reinterpret_cast<const char*>(&x), sizeof(int));
+			}
+			}
 			outStream.close();
 		}
 		
-	}
+		
+	
 	
 	void readFromMatrixFile()
 	{
@@ -33,8 +44,12 @@ public:
 		std::ifstream inStream("matrix", std::ios::binary);
 		if(inStream.is_open())
 		{
-			inStream.read(reinterpret_cast<char*>(&test), sizeof(int));
-			std::cout<<test<<'\n';
+			while(!inStream.eof())
+			{
+			inStream.read(reinterpret_cast<char*>(&test), sizeof(int));	
+			}
+			
+			inStream.close();
 		}
 	}
 private:
