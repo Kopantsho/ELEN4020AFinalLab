@@ -70,6 +70,17 @@ public:
 			}
 	}
 	
+	void printMatrix(const auto &inMatrix)
+	{
+		for(auto i = 0; i < matrixSize; i++){
+			
+			for(auto j = 0; j<matrixSize; j++){
+				std::cout<<inMatrix.at(i).at(j)<<' ';
+			}
+			std::cout<<'\n';
+			}
+	}
+	
 	r2Vec getMatrix()
 	{//Returns the current matrix
 		return matrix;
