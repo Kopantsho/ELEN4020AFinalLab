@@ -2,7 +2,7 @@
 #define BLOCKINGKEYVALUE_H
 #include <vector>
 #include <iostream>
-
+#include <omp.h>
 typedef std::vector<std::vector<int>> r2Vec;
 
 struct keyValuePair
@@ -28,10 +28,12 @@ public:
 		 std::cout<<runTotals<<'\n';
 		 //runTotals = runTotals*runTotals;// There will be a square amount of sub matrices
 		std::vector<keyValuePair> subBlockMapping;
+		omp_set_num_threads(4);
 		
+		#pragma omp parallel for shared(inMatrix, subBlockMapping)
 		for(auto i = 0; i < runTotals; i = i +blockSize)
 		{
-			keyValuePair tempBlock;
+			keyValuePair tempBlock;	
 			for(auto j = 0; j < runTotals; j = j +blockSize)
 			{
 				
