@@ -14,28 +14,15 @@ struct matrixElement{
 };
 
 
-void SerialMatrixTranspose(auto* inMatrix)
+void SerialMatrixTranspose(matrixElement inMatrix[])
 //Transposes a NxN matrix without any threading
 {
     cout<<"Transposing Blocks"<<endl;
-    auto N = inMatrix->size();
-    for(auto k = 0; k < N; k++)
-    {
-        auto M = inMatrix->at(k).subBlock.size();
-        auto tempVec = inMatrix->at(k).subBlock;
-         for(auto i = 0; i < M; i++)
-        {
-            for(auto j = i; j < M; j++){
-                auto tempVar = tempVec.at(i).at(j);
-                tempVec.at(i).at(j) = tempVec.at(j).at(i);
-                tempVec.at(j).at(i) = tempVar;
-            }
-        }
-        inMatrix->at(k).subBlock = tempVec;
+    for(auto i = 0; i < MATRIX_SIZE*MATRIX_SIZE; i++){
+      auto tempVar = inMatrix[i].x;
+      inMatrix[i].x = inMatrix[i].y;
+      inMatrix[i].y = tempVar;
     }
-    /*
-
-     * */
 }
 
 
@@ -48,9 +35,7 @@ int main(int argc, char **argv)
 	srand(time(0));
 	fileMatters myFile(MATRIX_SIZE);
   auto arr= myFile.getElements();
-  for(auto i = 0; i< MATRIX_SIZE*MATRIX_SIZE; i++){
-    cout<<arr[i]<<endl;
-  }
+
   //Serial the elements into coordinate pairs with value. Function was giving segmentation fault
   matrixElement elements[MATRIX_SIZE*MATRIX_SIZE];
   auto counter = 0;
@@ -62,8 +47,14 @@ int main(int argc, char **argv)
       counter++;
     }
   }
+  for(auto i = 0; i < MATRIX_SIZE*MATRIX_SIZE; i++)
+  {
+    cout<<elements[i].y<<' '<<elements[i].x<<' '<<elements[i].val<<endl;
+  }
+  SerialMatrixTranspose(elements);
 
-  for(auto i = 0; i< MATRIX_SIZE*MATRIX_SIZE; i++){
+  for(auto i = 0; i < MATRIX_SIZE*MATRIX_SIZE; i++)
+  {
     cout<<elements[i].y<<' '<<elements[i].x<<' '<<elements[i].val<<endl;
   }
 
