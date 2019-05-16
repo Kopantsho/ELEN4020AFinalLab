@@ -10,24 +10,27 @@ typedef std::vector<std::vector<int>> r2Vec;
 class fileMatters
 {
 public:
+
+	fileMatters() {
+		readFromMatrixFile();
+	}
 	fileMatters(const int inMatrixSize)
 	{
 		matrixSize = inMatrixSize;
-		elements = new int[inMatrixSize*inMatrixSize];
-		generateRandomMatrixFile();
-		readFromMatrixFile();
+		generateRandomMatrixFile(inMatrixSize);
+		//readFromMatrixFile();
 		std::cout<<"Object Created"<<std::endl;
 	}
 	~fileMatters()
 	{
-		delete[] elements;
 	}
-	void generateRandomMatrixFile()
+	void generateRandomMatrixFile(int matrixSize)
 	{//Generate file of row column order matrix in binary file
 		std::vector<int> numbers;
-		//Generate Random Numbers
+
 		for(auto i = 0; i< matrixSize*matrixSize; i++) {
 			numbers.push_back(std::rand() %100);
+			std::cout<<numbers.at(i)<<'\n';
 		}
 
 		std::ofstream outStream("matrix", std::ios::binary);
@@ -50,7 +53,7 @@ public:
 				//int *result = new int[matrixSize*matrixSize];
 				for(auto i = 0; i< matrixSize*matrixSize; i++){
 					inStream.read(reinterpret_cast<char*>(&test), sizeof(int));
-					elements[i] = test;
+					elements.push_back(test);
 				}
 			}
 			inStream.close();
@@ -60,33 +63,21 @@ public:
 
 	void printCurMatrixInMem()
 	{//Prints the current stored matrix
-		for(auto i = 0; i < matrixSize; i++){
+		for(auto i = 0; i < elements.size(); i++){
+			std::cout<<elements.at(i)<<' '<<std::endl;
 
-			for(auto j = 0; j<matrixSize; j++){
-				std::cout<<matrix.at(i).at(j)<<' ';
-			}
-			std::cout<<'\n';
 			}
 	}
 
-	void printMatrix(const auto &inMatrix)
-	{
-		for(auto i = 0; i < matrixSize; i++){
 
-			for(auto j = 0; j<matrixSize; j++){
-				std::cout<<inMatrix.at(i).at(j)<<' ';
-			}
-			std::cout<<'\n';
-			}
-	}
 
 auto getElements()
 {
 	return elements;
 }
 private:
-	r2Vec matrix;
-	int *elements;
+	int matrixSize;
+	std::vector<int> elements;
 };
 
 #endif // FILEREADER_H

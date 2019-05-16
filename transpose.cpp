@@ -5,7 +5,8 @@
 #include <iostream>
 #include "fileMatters.h"
 #include "blockingKeyValue.h"
-#define MATRIX_SIZE 9
+#include "mpi.h"
+#define MATRIX_SIZE 8
 using namespace std;
 struct matrixElement{
   int x;
@@ -31,9 +32,10 @@ using namespace std;
 int main(int argc, char **argv)
 {
 
-
+  //char *size = argv[1];
 	srand(time(0));
-	fileMatters myFile(MATRIX_SIZE);
+	fileMatters myFile(16);
+  /*
   auto arr= myFile.getElements();
 
   //Serial the elements into coordinate pairs with value. Function was giving segmentation fault
@@ -57,8 +59,21 @@ int main(int argc, char **argv)
   {
     cout<<elements[i].y<<' '<<elements[i].x<<' '<<elements[i].val<<endl;
   }
+*/
+/*
+MPI_Init(&argc, &argv);
+int rank, size;
 
+constexpr int n_structure_per_process = 5; //M =5
 
+//matrixElement data[n_structure_per_process];
 
+//Create mpi struct properties
+MPI_Aint displacements[2] ={};
+int block_lennths[2] = {};
+MPI_Datatype types[2] = {};
+MPI_Datatype custom_dt;
+*/
+//Create type and commit
 	return 0;
 }
