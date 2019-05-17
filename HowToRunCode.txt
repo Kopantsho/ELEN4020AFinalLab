@@ -1,0 +1,8 @@
+To run the code, MPI is required.
+To compile:
+mpicxx fileReadTranspose.cpp -o transpose
+To run:
+mpirun -np *NUMBER OF PROCESSORS* 
+
+To generate a new random file, specify a custom length in fileMaker.cpp:
+g++ filemaker.cpp -std=c++17

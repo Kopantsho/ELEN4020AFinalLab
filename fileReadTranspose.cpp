@@ -3,8 +3,9 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
-
+#include <array>
 #include <mpi.h>
+#include <fstream>
 using namespace std;
 struct matrixElement{
   int x;
@@ -26,57 +27,12 @@ void SerialMatrixTranspose(matrixElement inMatrix[], int size, int rank)
 
 int main(int argc, char **argv)
 {
-/*
-char *fileName = argv[1];
-int size, rank;
-//, err = 0, errs = 0, *buf, n;
-MPI_File matrixFile;
-MPI_Datatype filetype;
-MPI_Status status;
 
-MPI_Init(&argc, &argv);
-MPI_Comm comWorld = MPI_COMM_WORLD;
-MPI_Comm_size(MPI_COMM_WORLD, &size); //Number of processes
-MPI_Comm_rank(MPI_COMM_WORLD, &rank);//Current Rank
+  double start = MPI_Wtime();
 
-int error = MPI_File_open(MPI_COMM_WORLD, fileName, MPI_MODE_RDONLY, MPI_INFO_NULL, &matrixFile);
-if(error){
-  MPI_Abort(MPI_COMM_WORLD, 404); //File error
-}
-auto* buffer = (int*)malloc(sizeof(int));
-cout<<"Reading from file"<<endl;
-
-MPI_File_read(matrixFile, buffer, 1, MPI_INT, &status);
-int matrixSize = buffer[0];
-if(rank == 0)
-{
-
-  cout<<"World size:"<<size<<endl;
-  cout<<"Matrix size:"<<matrixSize<<endl;
-}
-auto m = (int)(matrixSize/size);
-auto* a = (int*)malloc(m*matrixSize*sizeof(int));
-auto* b = (int*)malloc(m*matrixSize*sizeof(int));
-int i,j;
-MPI_Offset blockLength = m*matrixSize;
-
-MPI_Offset displace = ((rank*blockLength)+1)*sizeof(int);
-MPI_File_set_view(matrixFile, displace, MPI_INT, MPI_INT, "native", MPI_INFO_NULL);
-MPI_File_read(matrixFile, a, blockLength, MPI_INT, &status);
-
-if(rank == 0)
-{
-  cout<<a<<endl;
-}
-MPI_File_close(&matrixFile);
-free(buffer);
-MPI_Finalize ();
-*/
-//https://www.codingame.com/playgrounds/349/introduction-to-mpi/custom-types
-
-
-int bufsize, *buf, count, matrixSize;
+int bufsize, count, *buf, matrixSize;
     char filename[128];
+    MPI_Datatype type;
     MPI_Status status;
 
     MPI_Init (&argc, &argv);
@@ -94,7 +50,9 @@ int bufsize, *buf, count, matrixSize;
     MPI_File_get_size(thefile, &filesize);  // in bytes
     filesize    = filesize / sizeof(int);    // in number of ints
     bufsize     = filesize / numprocs;   // local number to read
-    buf = (int *) malloc (bufsize * sizeof(int));
+    cout<<"Buf size: "<< bufsize <<endl;
+    buf = (int *) malloc (bufsize * sizeof(int)*100);
+
     MPI_File_set_view(thefile,(myrank) * bufsize * sizeof(int),
 		     MPI_INT, MPI_INT, "native", MPI_INFO_NULL);
     MPI_File_read(thefile, buf, bufsize, MPI_INT, &status);
@@ -104,28 +62,136 @@ int bufsize, *buf, count, matrixSize;
    matrixSize = count*numprocs;
    matrixSize = sqrt(matrixSize);
    cout<<"Matrix size "<<matrixSize<<endl;
+for (size_t i = 0; i < count; i++) {
+  cout<<buf[i]<<endl;
+}
+   MPI_File_close(&thefile);
+   //Define contiguous
+   MPI_Datatype dt_points;
+   MPI_Type_contiguous(3, MPI_INT, &dt_points);
+   MPI_Type_commit(&dt_points);
+
 
 //End of file reading part
-   auto n_structure_per_process = matrixSize;
+auto n_structure_per_process = matrixSize;
 
-   matrixElement elements[count];
-   int counter = 0;
-   for(auto i = 0; i < matrixSize/numprocs; i++){
-    for(auto j = 0; j < matrixSize; j++){
-      elements[counter].x = j;
-      elements[counter].y = i;
-      elements[counter].val = buf[counter];
-      counter++;
+matrixElement elements[bufsize];
+matrixElement recv[bufsize];
+
+      int counter = 0;
+      for(auto i = 0; i < matrixSize/numprocs; i++){
+       for(auto j = 0; j < matrixSize; j++){
+
+         elements[counter].x = j;
+         elements[counter].y = i;
+         elements[counter].val = buf[counter];
+         cout<<elements[counter].x<<' '<<elements[counter].y<<' '<<elements[counter].val<<endl;
+         counter++;
+       }
+     }
+      free(buf);
+       cout<<"From process: "<<myrank<<" counter is "<<counter<<endl;
+
+      SerialMatrixTranspose(elements, count, myrank);
+    if(myrank == 0)//send on not zero
+    {
+      matrixElement matrixElements[numprocs][bufsize];
+      for(auto i = 0; i < bufsize; i++)
+      {
+          matrixElements[0][i] = elements[i];
+      }
+
+      for(auto i = 1; i< numprocs; i++){
+          MPI_Recv(recv, bufsize, dt_points,i, 0, MPI_COMM_WORLD, &status);
+          //matrixElements[i] = &recv;
+          cout<<"received from "<<i<<endl;
+          for(auto j = 0; j< bufsize; j++){
+
+            matrixElements[i][j] = recv[j];
+          }
+
+        }
+
+        for(auto i = 0; i< numprocs; i++)
+        {
+          for(auto j = 0; j < bufsize; j++)
+          {
+              int temp = matrixElements[i][j].x;
+              matrixElements[i][j].x = temp+matrixSize/numprocs*i;
+              cout<<matrixElements[i][j].x<<' '<<matrixElements[i][j].y<<' '<<matrixElements[i][j].val<<endl;
+
+          }
+        }
+        cout<<"SPLIT"<<endl;
+        //Put into array
+         matrixElement resultVals[matrixSize];
+         int placer = 0;
+         int condition = 0;
+
+
+    //Put into serial
+        for (size_t i = 0; i< numprocs; i++){
+          for (size_t j = 0; j < bufsize; j++) {
+            resultVals[placer] = matrixElements[i][j];
+            placer++;
+          }
+        }
+
+//Bubble sort
+
+for(auto i=0;i<=matrixSize*matrixSize;i++)
+{
+for(auto j=0;j<=matrixSize*matrixSize-1;j++)
+{
+if(resultVals[j].y>resultVals[j+1].y)
+{
+matrixElement temp=resultVals[j];
+resultVals[j]=resultVals[j+1];
+resultVals[j+1]=temp;
+}
+}
+}
+
+int k=1;
+  for(auto j = 0; j < matrixSize*matrixSize; j++){
+    cout << resultVals[j].val  << " ";
+    if(j == 7*k){
+      cout << endl;
+      k++;
     }
   }
-    cout<<"From process: "<<myrank<<" counter is "<<counter<<endl;
-    //for(auto i = 0; i < count;i++){
-  //    cout<<elements[i].y<<' '<<elements[i].x<<' '<<elements[i].val<<endl;
-    //}
-    SerialMatrixTranspose(elements, count, myrank);
-    free(buf);
-    MPI_File_close(&thefile);
+
+
+
+
+
+//Print out file
+/*
+std::ofstream outStream("matrix_out", std::ios::binary);
+if(outStream.is_open()){
+  for(auto x=0; x< matrixSize; x++){
+  outStream.write(reinterpret_cast<const char*>(&matrixElements[x]), sizeof(int));
+  }
+  }
+  outStream.close();
+*/
+
+
+
+    } else {//receive on zero
+
+      MPI_Send(&elements, bufsize, dt_points, 0,0,MPI_COMM_WORLD);
+      cout<<"Sending from "<<myrank<<endl;
+
+
+    }
+
+
     MPI_Finalize();
+
+    double end = MPI_Wtime();
+
+    cout << "Time in seconds for rank " << myrank<< ": " << end - start << endl;
 
     return 0;
 }
