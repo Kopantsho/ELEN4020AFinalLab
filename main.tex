@@ -1,0 +1,118 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+
+%\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
+
+\documentclass[a4paper, 11pt, twocolumn, conference]{IEEEtran}      % Use this line for a4 paper
+
+\IEEEoverridecommandlockouts                            %   This command is only needed if 
+ % you want to use the \thanks command
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{cleveref}
+\usepackage[]{algpseudocode}
+\usepackage[]{algorithm2e}
+%\usepackage[]{algorithm2e}
+%\usepackage[pdftex]{graphicx}
+
+%\usepackage[final]{pdfpages}
+%\usepackage[pdftex]{graphicx}
+%\overrideIEEEmargins                                      % Needed to meet printer requirements.
+
+% See the \addtolength command later in the file to balance the column lengths
+% on the last page of the document
+
+% The following packages can be found on http:\\www.ctan.org
+%\usepackage{graphics} % for pdf, bitmapped graphics files
+%\usepackage{epsfig} % for postscript graphics files
+%\usepackage{mathptmx} % assumes new font selection scheme installed
+%\usepackage{times} % assumes new font selection scheme installed
+%\usepackage{amsmath} % assumes amsmath package installed
+%\usepackage{amssymb}  % assumes amsmath package installed
+
+\title{\LARGE \bf
+ELEN4020A: Out-of-Core Matrix Transposition of Big Data using MPI-IO 
+}
+
+\author{ Kopantsho Mathafa (849038)\ \ \ \ \ \ Chizeba Maulu (900968) \ \ \ \ \ \ James Phillips (1036603) \\ \today \\
+}
+
+
+\begin{document}
+
+\maketitle
+\thispagestyle{plain}
+\pagestyle{plain}
+
+\section{Introduction}
+Computational operations on data-sets are generally performed using core memory. Very large datasets which exceed core memory pose both a memory capacity and computation challenge. Out of core data, or that stored on a hard disk, solves the memory capacity problem \cite{8411067}. This solution entails saving the data on a local or remote file which is accessed by the program which contains the algorithm(s) to be applied to the data. However, accessing this file, provided it is large, is computationally expensive if performed sequentially. Collective IO presents an elegant solution to this problem by accessing the data using multiple processes which divide the data among themselves \cite{7152595}. Once accessed, this data need be operated upon by these processes. This entails transfer of data between these processes. One- or two-sided communication can be used depending on whether both processes are required to participate in the communication or need be synchronized. \\
+This paper presents the transposition of an out-of-core matrix using one-sided communication functionality and dervided datatypes defined in Message Passing Interface (MPI). MPI is a standard interface used to write distributed memory programs \cite{1253341}. \\
+The rest of the paper is organized as follows, \Cref{sec:prob} presents the problem under study. A brief literature review is performed in \Cref{sec:lit}. The implemented MPI program as well as the experimental environment in which it is run used is described in \Cref{sec:algo}. \Cref{sec:res} critically evaluates the results of the algorithm. 
+
+\section{Literature Review}\label{sec:lit}
+Fu et al. propose a framework based on MPI one-sided communication for graph processing \cite{8411067}. Given the size and rapid growth of the graphs, they are difficult to store on a single machine. The framework is formulated accross the global address space. It uses MPI \texttt{Put} to transfer data to enhance scalability and efficiency. The computation processes is divided into portions that can be overlapped. The result is the framework has 35\% faster job completion time than frameworks that employ two-sided communication to the same problem. 
+He et al. apply one-sided communication to the computationally-intensive Computed Tomography (CT) image reconstruction process \cite{4673583}. The process is used to deduce a patient's internal structure using a CT scans projections. The underlying algorithm used in the process is the Katsevich algorithm. \\
+Zhou et al. employ the one-sided communication functionality defined in MPI-2 with an asynchronous engine for non-blocking communication operations \cite{7823848}. A scheme is developed that uses an arbitrary amount of processes with to drive asynchronous progression as opposed to an additional thread within the application. The scheme intends to improve the communication cost between processes and ensure efficient communication is overlapped efficiently. \\
+Similarly, Dinan et al. develop an MPI-based runtime for programs with Partitioned Global Address Space (PGAS) models \cite{6267872}. They assert that the one-sided communication defined in MPI-2 does not sufficiently support higher-level global array parallel programming models. Their design enhances interoperability and portability of MPI and GA applications.\\
+
+\section{Problem description}\label{sec:prob}
+A group of processes is required to generate a large, two-dimensional square matrix. The elements of this matrix are randomly generated integers with range 0-99. This matrix must be written to a file which will serve at the input file to the transpose algorithm. The format of this file is required to have the rank of the matrix as the first value; the rest of the values are the elements of the matrix in row-major order starting from $A[0][0]$, where $A$ is the matrix. This matrix is the global input matrix to the program. Reading the data requires dividing the matrix between several processes. These processes will then each have a sub-matrix of the size defined by the programmer. Each process will perform the transposition. Once complete, the transposed sub-matrices are assigned to different processes. The transpose must be written to an output file in row-major order. The program must be tested with matrix sizes of $2^n$ where $n$ = {3,4,5,6,7}. The number of processes $P$ should have values $P$ = {16,32,64}. 
+
+
+
+
+\section{Algorithm}\label{sec:algo}
+The program is run on an 8-core machine with 16 GB of memory. The CPU has a clock rate of 3.4GHz. 
+\section{Evaluation of results}\label{sec:res}
+\section{Conclusion}
+
+\section{Pseudocode}
+\subsection{Word count algorithm}
+
+\begin{algorithm}[H]
+ \KwData{Any data type object and a container }
+ \KwResult{An intermediate key/value pair}
+ Convert all characters in objects text data to uppercase\;
+ \While{While not at the end of the text data}{
+  \While{While not reading an uppercase char alphabet}{
+  Increment a counter\;
+  \IF{If the counter has increased in value}{
+  Store the word\;
+  \eIf{If it the word is a stop word}{
+  Do nothing\;
+  }{ Send out intermediate key/value pair for further processing\;}
+  }
+  }
+ }
+ \caption{Phoenix++ map function implementation}
+\end{algorithm}
+
+\subsection{Inverted Index algorithm}
+
+\begin{algorithm}[H]
+ \KwData{K value}
+ \KwResult{List of top K occuring words and the lines they appear in}
+ \For{From 0 to K}{
+    \For{From 0 until the end of the text data}{
+        \For{Each non-stop word found in the text}{
+                Store the line which the word is found on;
+        }
+    }
+ }
+
+Print the top most appearing words and the lines they are found on\;
+
+ \caption{Inverted index function implementation}
+\end{algorithm}
+
+
+
+\section{Conclusion}
+The MapReduce solution of the word count, top-K query and inverted index problems is presented. MapReduce decomposes large datasets and divides their reading and processing between processing units. The MapReduce functionality of the Phoenix framework is utilised in the solution. The word count algorithm of the large dataset takes longer than that of the small dataset. The top 10 and 20 queries are determined in relatively similar times for both datasets. Although a serial inverted index algorithm is implemented, the MapReduce algorithm was unsuccessful. No running time tests are performed due to this. 
+
+ 
+\bibliographystyle{IEEEtran}
+\bibliography{references.bib}
+\end{document}
+
